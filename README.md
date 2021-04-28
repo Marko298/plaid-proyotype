@@ -1,0 +1,4 @@
+- Install dependencies `composer install`
+- Fill in `.env` file
+- Launch server `php artisan serve`
+- Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
