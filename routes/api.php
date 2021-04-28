@@ -17,7 +17,3 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('plaid/confirm', [PlaidController::class, 'confirm'])->name('plaid.confirm');
 Route::post('stripe/create-customer', [PlaidController::class, 'confirm'])->name('stripe.create-customer');
-
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
