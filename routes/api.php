@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\PlaidController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\StripeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,4 +16,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('plaid/confirm', [PlaidController::class, 'confirm'])->name('plaid.confirm');
-Route::post('stripe/create-customer', [PlaidController::class, 'confirm'])->name('stripe.create-customer');
+Route::post('stripe/create-customer', [StripeController::class, 'charge'])->name('stripe.create-customer');
