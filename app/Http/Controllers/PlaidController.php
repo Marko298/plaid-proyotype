@@ -6,23 +6,23 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Stripe\Customer;
+use Stripe\StripeClient;
+use Throwable;
 use TomorrowIdeas\Plaid\Entities\User;
 use TomorrowIdeas\Plaid\Plaid;
 
 class PlaidController extends Controller
 {
-    public function index(Plaid $plaid)
+    public function index(Request $request, Plaid $plaid)
     {
-        $user_id = 'Plaid ' . Str::uuid();
-
-        Log::debug('Creating token for user: ' . $user_id);
+        $customer = $this->getCustomer($request);
 
         $token = $plaid->tokens->create(
             'Lucky Diem',
             'en',
             ['US'],
-            new User($user_id),
+            new User($customer->id),
             ['auth'],
             'https://sample.webhook.com',
         );
@@ -31,15 +31,16 @@ class PlaidController extends Controller
 
         return view('plaid', [
             'token'   => $token->link_token,
-            'user_id' => $user_id,
+            'user_id' => $customer->id,
         ]);
     }
 
-    public function confirm(Request $request, Plaid $plaid)
+    public function confirm(Request $request, Plaid $plaid, StripeClient $stripe)
     {
         $request->validate([
-            'account_id'   => 'required|string',
             'public_token' => 'required|string',
+            'account_id'   => 'required|string',
+            'customer_id'  => 'required|string|max:200',
         ]);
 
         Log::debug('Requesting exchange', (array) $request->json());
@@ -55,8 +56,34 @@ class PlaidController extends Controller
 
         Log::debug('Plaid stripe token response', (array) $stripeToken);
 
-        return [
-            'stripe_token' => $stripeToken->stripe_bank_account_token,
-        ];
+        $customer = $stripe->customers->retrieve($request['customer_id']);
+
+        /** @var \Stripe\Source $method */
+        $source = $customer->sources->create([
+            'source' => $stripeToken->stripe_bank_account_token,
+        ]);
+
+        Log::debug('Successfully created method ' . $source->id);
+
+        return [];
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     * @return \Stripe\Customer
+     */
+    protected function getCustomer(Request $request): Customer
+    {
+        try {
+            $request->validate([
+                'customer-id' => 'required|string|max:200',
+            ]);
+
+            Log::debug('Retrieving user ' . $request['customer-id']);
+
+            return app(StripeClient::class)->customers->retrieve($request['customer-id']);
+        } catch (Throwable $exception) {
+            redirect()->route('wrong_id')->throwResponse();
+        }
     }
 }

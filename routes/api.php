@@ -15,5 +15,4 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::post('plaid/confirm', [PlaidController::class, 'confirm'])->name('plaid.confirm');
-Route::post('stripe/create-customer', [StripeController::class, 'charge'])->name('stripe.create-customer');
+Route::post('confirm', [PlaidController::class, 'confirm'])->name('plaid.confirm');

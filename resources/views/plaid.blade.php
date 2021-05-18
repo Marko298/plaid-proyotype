@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ config('app.name') }}</title>
     <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 </head>
 <body>
 <button id="link-button" disabled>Request payment method</button>
-<button id="create-customer" disabled>Create Customer</button>
 <h1 id="customer-id"></h1>
 <script type="text/javascript">
     async function postRequest(url, body) {
@@ -22,25 +21,9 @@
     }
 
     async function processPlaid(public_token, account_id) {
-        const { stripe_token } = await postRequest('{{ route('plaid.confirm') }}', {
+       await postRequest('{{ route('plaid.confirm') }}', {
             public_token, account_id,
         });
-
-        console.log('Stripe token: ' + stripe_token);
-
-        const button = document.querySelector('#create-customer');
-        button.disabled = false;
-        button.onclick = () => linkPaymentMethod(stripe_token);
-    }
-
-    async function linkPaymentMethod(token) {
-        const { id } = await postRequest('{{ route('stripe.create-customer') }}', {
-            user_id: '{{ $user_id }}',
-            token: token,
-        });
-
-        document.querySelector('#create-customer').disabled = true;
-        document.querySelector('#customer-id').innerHTML = id;
     }
 
     (async function() {
@@ -48,6 +31,7 @@
             token: '{{ $token }}',
             onLoad: function() {
                 document.querySelector('#link-button').disabled = false;
+                document.querySelector('#link-button').click();
             },
             onSuccess: async function(public_token, metadata) {
                 const accountId = metadata.accounts[0].id;

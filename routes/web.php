@@ -15,3 +15,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [PlaidController::class, 'index']);
+Route::view('/wrong-customer', 'wrong_customer')->name('wrong_id');
