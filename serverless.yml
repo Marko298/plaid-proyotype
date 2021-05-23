@@ -1,0 +1,49 @@
+service: plaid
+
+provider:
+    name: aws
+    # The AWS region in which to deploy (us-east-1 is the default)
+    region: eu-central-1
+    # The stage of the application, e.g. dev, production, staging… ('dev' is the default)
+    stage: production
+    runtime: provided.al2
+
+package:
+    # Directories to exclude from deployment
+    exclude:
+        - .env
+        - node_modules/**
+        - public/storage
+        - resources/assets/**
+        - storage/**
+        - tests/**
+
+functions:
+    # This function runs the Laravel website/API
+    web:
+        handler: public/index.php
+        timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
+        layers:
+            - ${bref:layer.php-80-fpm}
+        events:
+            -   httpApi: '*'
+        enviroment:
+          APP_NAME: 'LuckyDiem'
+          APP_KEY: ${ssm:/plaid/app-key}
+          PLAID_CLIENT_ID: ${ssm:/plaid/plaid-client-id}
+          PLAID_CLIENT_SECRET: ${ssm:/plaid/plaid-client-secret}
+          PLAID_ENVIRONMENT: ${ssm:/plaid/plaid-env}
+          STRIPE_API_KEY: ${ssm:/plaid/stripe-api-key}
+
+
+  # This function lets us run artisan commands in Lambda
+#    artisan:
+#        handler: artisan
+#        timeout: 120 # in seconds
+#        layers:
+#            - ${bref:layer.php-80} # PHP
+#            - ${bref:layer.console} # The "console" layer
+
+plugins:
+    # We need to include the Bref plugin
+    - ./vendor/bref/bref
