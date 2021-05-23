@@ -17,3 +17,20 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+
+Artisan::command('test-customer', function () {
+    if(!app()->environment('local')) {
+        $this->error('This command intended only for dev usage');
+    }
+
+    $customers = app(\Stripe\StripeClient::class)->customers->all([
+        'limit' => 5,
+        'email' => 'plaid-test@example.com'
+    ]);
+
+    /** @var \Stripe\Customer $customer */
+    $customer = $customers->first();
+
+    dd(route('plaid', ['customer-id' => $customer->id]));
+});
